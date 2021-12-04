@@ -6,14 +6,10 @@ repositories {
     mavenCentral()
 }
 
-tasks {
-    sourceSets {
-        main {
-            java.srcDirs("src")
-        }
-    }
+sourceSets.main {
+    java.srcDirs("src")
+}
 
-    wrapper {
-        gradleVersion = "7.3"
-    }
+tasks.wrapper {
+    gradleVersion = "7.3"
 }
