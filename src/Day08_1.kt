@@ -4,18 +4,16 @@ fun main() {
     val ans = IntArray(11)
     for (s in input) {
         val (a, b) = s.split(" | ")
-        val q = arrayOfNulls<String>(11)
-        for (x0 in a.split(" ")) {
-            val x = x0.toCharArray().sorted().joinToString("")
-            when (x.length) {
+        val q = arrayOfNulls<Set<Char>>(11)
+        for (x in a.split(" ").map { it.toSet() }) {
+            when (x.size) {
                 2 -> q[1] = x
                 4 -> q[4] = x
                 3 -> q[7] = x
                 7 -> q[8] = x
             }
         }
-        for (x0 in b.split(" ")) {
-            val x = x0.toCharArray().sorted().joinToString("")
+        for (x in b.split(" ").map { it.toSet() }) {
             val i = q.indexOf(x)
             if (i >= 0) ans[i]++
         }
