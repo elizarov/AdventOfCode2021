@@ -13,3 +13,9 @@ sourceSets.main {
 tasks.wrapper {
     gradleVersion = "7.3"
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        freeCompilerArgs = listOf("-opt-in=kotlin.time.ExperimentalTime", "-opt-in=kotlin.RequiresOptIn")
+    }
+}
