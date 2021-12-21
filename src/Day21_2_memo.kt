@@ -25,7 +25,7 @@ fun main() {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-fun <T, R> MemoizedRecursiveFunction(block: suspend DeepRecursiveScope<T,R>.(T) -> R): DeepRecursiveFunction<T, R> {
+inline fun <T, R> MemoizedRecursiveFunction(crossinline block: suspend DeepRecursiveScope<T,R>.(T) -> R): DeepRecursiveFunction<T, R> {
     val memo = HashMap<T,R>()
     return DeepRecursiveFunction { param ->
         if (param in memo) {
