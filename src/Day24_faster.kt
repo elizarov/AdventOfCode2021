@@ -182,7 +182,8 @@ enum class OpType(val str: String) {
     EQL("=="),
     NEQ("!="),
     MOV("<-"),
-    AND("&&");
+    AND("&&"),
+    OR("||");
 
     override fun toString(): String = str
 }
