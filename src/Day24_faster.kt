@@ -1,38 +1,10 @@
 import kotlin.time.*
 
 fun main() {
-    val dayId = "24"
     // Parse input
-    val insts0 = readInput("Day${dayId}").map {
-        val s = it.split(" ")
-        when (s[0]) {
-            "inp" -> Inp(s[1].toReg())
-            "add" -> Op(OpType.ADD, s[1].toReg(), s[2].toParam())
-            "mul" -> Op(OpType.MUL, s[1].toReg(), s[2].toParam())
-            "div" -> Op(OpType.DIV, s[1].toReg(), s[2].toParam())
-            "mod" -> Op(OpType.MOD, s[1].toReg(), s[2].toParam())
-            "eql" -> Op(OpType.EQL, s[1].toReg(), s[2].toParam())
-            else -> error("op=${s[0]}")
-        }
-    }
+    val insts0 = parseDay24()
     // Optimize program
-    val insts = buildList {
-        var i = 0
-        while (i < insts0.size) {
-            val inst = insts0[i++]
-            val next = insts0.getOrNull(i)
-            when {
-                inst is Op && inst.op == OpType.DIV && inst.b is Val && inst.b.v == 1 -> { /* skip */ }
-                inst is Op && inst.op == OpType.MUL && inst.b is Val && inst.b.v == 0 && next is Op &&
-                    next.op == OpType.ADD && next.r == inst.r ->
-                        { i++; add(Op(OpType.MOV, inst.r, next.b)) }
-                inst is Op && inst.op == OpType.EQL && next is Op &&
-                    next.op == OpType.EQL && next.r == inst.r && next.b is Val && next.b.v == 0 ->
-                        { i++; add(Op(OpType.NEQ, inst.r, inst.b)) }
-                else -> add(inst)
-            }
-        }
-    }
+    val insts = insts0.optimized()
     println("Optimized ${insts0.size} instructions down to ${insts.size}")
     // Find input instructions and their powers
     val n = insts.size
@@ -91,6 +63,7 @@ fun main() {
                     OpType.EQL -> find(i + 1, st.set(inst.r, if (st[inst.r] == st[inst.b]) 1 else 0, um[i + 1]))
                     OpType.NEQ -> find(i + 1, st.set(inst.r, if (st[inst.r] == st[inst.b]) 0 else 1, um[i + 1]))
                     OpType.MOV -> find(i + 1, st.set(inst.r, st[inst.b], um[i + 1]))
+                    else -> error("${inst.op}")
                 }
             }
             dp[i][st] = ans
@@ -104,6 +77,39 @@ fun main() {
     }
     Task(1).run()
     Task(2).run()
+}
+
+fun parseDay24(): List<Inst> {
+    val dayId = "24"
+    return readInput("Day${dayId}").map {
+        val s = it.split(" ")
+        when (s[0]) {
+            "inp" -> Inp(s[1].toReg())
+            "add" -> Op(OpType.ADD, s[1].toReg(), s[2].toParam())
+            "mul" -> Op(OpType.MUL, s[1].toReg(), s[2].toParam())
+            "div" -> Op(OpType.DIV, s[1].toReg(), s[2].toParam())
+            "mod" -> Op(OpType.MOD, s[1].toReg(), s[2].toParam())
+            "eql" -> Op(OpType.EQL, s[1].toReg(), s[2].toParam())
+            else -> error("op=${s[0]}")
+        }
+    }
+}
+
+fun List<Inst>.optimized() = buildList {
+    val insts0 = this@optimized
+    var i = 0
+    while (i < insts0.size) {
+        val inst = insts0[i++]
+        val next = insts0.getOrNull(i)
+        when {
+            inst is Op && inst.op == OpType.DIV && inst.b is Val && inst.b.v == 1 -> { /* skip */ }
+            inst is Op && inst.op == OpType.MUL && inst.b is Val && inst.b.v == 0 && next is Op &&
+                next.op == OpType.ADD && next.r == inst.r -> { i++; add(Op(OpType.MOV, inst.r, next.b)) }
+            inst is Op && inst.op == OpType.EQL && next is Op && next.op == OpType.EQL && next.r == inst.r &&
+                next.b is Val && next.b.v == 0 -> { i++; add(Op(OpType.NEQ, inst.r, inst.b)) }
+            else -> add(inst)
+        }
+    }
 }
 
 object Regs {
@@ -168,5 +174,17 @@ sealed class Inst { abstract val r: Int }
 data class Inp(override val r: Int) : Inst()
 data class Op(val op: OpType, override val r: Int, val b: Param) : Inst()
 
-enum class OpType { ADD, MUL, DIV, MOD, EQL, NEQ, MOV }
+enum class OpType(val str: String) {
+    ADD("+"),
+    MUL("*"),
+    DIV("/"),
+    MOD("%"),
+    EQL("=="),
+    NEQ("!="),
+    MOV("<-"),
+    AND("&&");
+
+    override fun toString(): String = str
+}
+
 
