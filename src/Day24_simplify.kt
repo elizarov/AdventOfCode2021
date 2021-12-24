@@ -226,7 +226,7 @@ fun SExpr.simplifyDiv(): SExpr = when {
     else -> SOp(OpType.DIV, this, SVal(MODULO), SRange(r.p / MODULO, (r.q + MODULO - 1) / MODULO))
 }
 
-fun SExpr.equalsToZero(calledFromEql: Boolean = false): SExpr = when {
+fun SExpr.equalsToZero(): SExpr = when {
     r.p > 0 -> SVal(0)
     this is SModInd -> simplifyAnd(a.equalsToZero(), simplifyOr(c.equalsToZero(), b.equalsToZero()))
     this is SOp && op == OpType.NEQ -> simplifyEql(a, b)
@@ -235,14 +235,10 @@ fun SExpr.equalsToZero(calledFromEql: Boolean = false): SExpr = when {
     this is SOp && op == OpType.EQL && b is SVal && b.v == 0 && a.r.p >= 0 && a.r.p <= 1 -> a
     this is SOp && op == OpType.EQL -> simplifyNeq(a, b)
     this is SIf -> simplifyIf(c, a.equalsToZero(), b.equalsToZero())
-    else -> if (calledFromEql) SOp(OpType.EQL, this, SVal(0), BoolRange) else simplifyEql(this, SVal(0))
+    else -> SOp(OpType.EQL, this, SVal(0), BoolRange)
 }
 
 fun simplifyEql(a: SExpr, b: SExpr): SExpr = when {
-    !a.r.intersects(b.r) -> SVal(0)
-    a is SVal && b is SVal -> SVal(if (a.v == b.v) 1 else 0)
-    a is SIf -> simplifyIf(a.c, simplifyEql(a.a, b), simplifyEql(a.b, b))
-    b is SVal && b.v == 0 -> a.equalsToZero(calledFromEql = true)
     else -> SOp(OpType.EQL, a, b, BoolRange)
 }
 
